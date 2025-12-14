@@ -1,0 +1,24 @@
+name: DAPS
+method:
+  _target_: algo.daps.DAPS
+  annealing_scheduler_config:
+    num_steps: 20
+    sigma_max: 80.0
+    sigma_min: 0.01
+    sigma_final: 0
+    schedule: 'linear'
+    timestep: 'poly-7'
+
+  diffusion_scheduler_config:
+    num_steps: 10
+    sigma_min: 0.01
+    sigma_final: 0
+    schedule: 'linear'
+    timestep: 'poly-7'
+
+  lgvd_config:
+    num_steps: 20
+    lr: 1e-6
+    tau: 0.01
+    lr_min_ratio: 0.01
+

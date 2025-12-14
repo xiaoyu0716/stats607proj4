@@ -1,0 +1,25 @@
+# 这些命令需要在 Google Colab Notebook 中运行，不是在本地终端！
+
+# ============================================
+# 在 Colab 中按顺序运行以下 cells:
+# ============================================
+
+# Cell 1: 安装依赖
+!pip install torch torchvision numpy scipy matplotlib tqdm
+
+# Cell 2: 上传文件后设置路径
+import sys
+sys.path.insert(0, '/content')
+
+# Cell 3: 检查 GPU
+import torch
+print(f"CUDA: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+
+# Cell 4: 运行训练
+!python scripts/train_toy_image_lesion_colab.py
+
+# Cell 5: 下载模型
+from google.colab import files
+files.download('toy_image_lesion_diffusion.pt')

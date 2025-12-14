@@ -1,0 +1,25 @@
+# Hydra config for both training and inference
+
+model:
+  _target_: models.toy_mlp_diffusion.ToyDiffusionMLP
+  dim: 16
+  hidden: 128
+
+training:
+  total_steps: 20000
+  batch_size: 256
+  lr: 1e-3
+
+prior:
+  # These params are used by the training script to sample from the true prior
+  gauss_rho: 0.8
+  mog8_mu: 2.0
+  mog8_wm_full: 0.5
+  mog8_wp_full: 0.5
+
+noise_schedule:
+  # These params are used by the training script
+  sigma_min: 0.002
+  sigma_max: 80.0 # Standard for VP SDE
+
+

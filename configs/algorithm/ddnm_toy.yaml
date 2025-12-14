@@ -1,0 +1,11 @@
+name: DDNM-Toy
+method:
+  _target_: algo.ddnm.DDNM
+  scheduler_config:
+    num_steps: 200
+    schedule: 'linear'
+    timestep: 'poly-7'
+    sigma_min: 0.01
+    sigma_max: 3.0
+  eta: 0.5
+  L: 0

@@ -1,0 +1,59 @@
+# ============================================================
+# Toy 16×16 image problem with blur + downsampling
+# Prior: Two-component Gaussian mixture (normal vs lesion)
+# ============================================================
+
+name: toy-image-lesion
+prior: toy_image_lesion_diffusion.pt  # Trained diffusion model for 16×16 images
+
+model:
+  _target_: inverse_problems.toy_image_lesion.ToyImageLesionProblem
+  blur_sigma: 1.0  # Gaussian blur sigma (pixels)
+  noise_std: 0.03  # Observation noise std (pixels in [0,1])
+  tau: 0.2  # Prior std: Σ = τ²I
+  lesion_prior_weight: 0.1  # π (lesion prior weight)
+  lesion_amplitude: 0.25  # Amplitude of lesion
+  lesion_radius: 3  # Radius of lesion in pixels
+  device: 'cpu'
+
+data:
+  _target_: training.dataset.ToyDataset
+  num_samples: 1
+
+evaluator:
+  _target_: eval.Image  # Use Image evaluator for image problems
+
+exp_dir: exps/inference/toy-image-lesion
+
+# Toy 16×16 image problem with blur + downsampling
+# Prior: Two-component Gaussian mixture (normal vs lesion)
+# ============================================================
+
+name: toy-image-lesion
+prior: toy_image_lesion_diffusion.pt  # Trained diffusion model for 16×16 images
+
+model:
+  _target_: inverse_problems.toy_image_lesion.ToyImageLesionProblem
+  blur_sigma: 1.0  # Gaussian blur sigma (pixels)
+  noise_std: 0.03  # Observation noise std (pixels in [0,1])
+  tau: 0.2  # Prior std: Σ = τ²I
+  lesion_prior_weight: 0.1  # π (lesion prior weight)
+  lesion_amplitude: 0.25  # Amplitude of lesion
+  lesion_radius: 3  # Radius of lesion in pixels
+  device: 'cpu'
+
+data:
+  _target_: training.dataset.ToyDataset
+  num_samples: 1
+
+evaluator:
+  _target_: eval.Image  # Use Image evaluator for image problems
+
+exp_dir: exps/inference/toy-image-lesion
+
+
+
+
+
+
+

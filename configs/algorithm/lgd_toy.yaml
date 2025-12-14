@@ -1,0 +1,11 @@
+name: LGD-Toy
+method:
+  _target_: algo.lgd.LGD
+  diffusion_scheduler_config:
+    num_steps: 100
+    schedule: 'linear'
+    timestep: 'poly-7'
+    sigma_min: 0.01
+    sigma_final: 0
+  num_samples: 5
+  guidance_scale: 1e-2

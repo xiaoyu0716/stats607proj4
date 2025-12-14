@@ -1,0 +1,14 @@
+name: DiffPIR-Toy
+method:
+  _target_: algo.diffpir.DiffPIR
+  diffusion_scheduler_config:
+    num_steps: 200
+    schedule: 'linear'
+    timestep: 'poly-7'
+    sigma_min: 0.01
+    sigma_max: 5.0
+    sigma_final: 0
+  sigma_n: 0.5
+  lamb: 0.1
+  xi: 0.0
+  linear: True

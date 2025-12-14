@@ -1,0 +1,10 @@
+method:
+  _target_: algo.dps.DPS
+  diffusion_scheduler_config:
+    num_steps: 100
+    schedule: 'vp'
+    timestep: 'vp'
+    scaling: 'vp'
+  guidance_scale: 10
+  sde: true
+name: DPS

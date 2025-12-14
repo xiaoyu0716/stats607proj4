@@ -1,0 +1,8 @@
+name: REDDiff-Toy
+method:
+  _target_: algo.reddiff.REDDiff
+  num_steps: 500
+  observation_weight: 10.0
+  base_lr: 1e-2
+  base_lambda: 0.5
+  lambda_scheduling_type: 'constant'

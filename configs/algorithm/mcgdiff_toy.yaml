@@ -1,0 +1,10 @@
+name: MCG-diff-toy
+method:
+  _target_: algo.mcgdiff.MCG_diff
+  scheduler_config:
+    num_steps: 10
+    sigma_max: 10.0
+    sigma_min: 0.001
+    schedule: 'linear'
+    timestep: 'poly-7'
+  num_particles: 10

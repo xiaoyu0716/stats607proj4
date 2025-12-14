@@ -1,0 +1,32 @@
+# ============================================================
+# Toy linear inverse problem with gausscmog8 prior
+# ============================================================
+
+name: toy-gausscmog8
+prior: toy_gausscmog8_diffusion.pt
+
+model:
+  _target_: inverse_problems.toy_gausscmog8.ToyGausscMoG8Problem
+  dim: 16
+  # A_type options: 'Identity', 'random-gaussian', 'mri-like', 'fixed-full-rank-16x16'
+  A_type: Identity
+  A_seed: 1234
+  A_scale: 1.0
+  A_obs_dim: 16 # Observation dimension: 16 for 16D problem (16x16 full-rank matrix)
+  noise_std: 0.5
+  # Prior params
+  gauss_rho: 0.8
+  mog8_mu: 2.0
+  mog8_wm_full: 0.5
+  mog8_wp_full: 0.5
+  device: 'cpu'
+
+data:
+  _target_: training.dataset.ToyDataset
+  num_samples: 1
+
+evaluator:
+  _target_: eval.ToyEvaluator
+  skip_mse: true  # Set to false if you want to calculate MSE
+
+exp_dir: exps/inference/toy-gausscmog8

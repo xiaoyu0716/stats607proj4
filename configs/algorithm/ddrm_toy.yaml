@@ -1,0 +1,11 @@
+name: DDRM-Toy
+method:
+  _target_: algo.ddrm.DDRM
+  scheduler_config:
+    num_steps: 200
+    sigma_max: 5.0
+    sigma_min: 0.01
+    schedule: 'linear'
+    timestep: 'poly-7'
+  eta: 0.85
+  eta_b: 0.5

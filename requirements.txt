@@ -1,0 +1,32 @@
+# Requirements for running UQ coverage experiment
+# 
+# Installation:
+#   pip install -r requirements.txt
+#
+# Or for CUDA support (recommended for GPU):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   pip install -r requirements.txt
+#
+# Usage:
+#   python scripts/uq_simulation_analysis.py --experiment coverage --methods DPS DAPS --N 200 --K 100
+
+# Core scientific computing
+numpy>=1.26.0,<2.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Configuration management (required for loading YAML configs)
+omegaconf>=2.3.0
+hydra-core>=1.3.0
+
+# Data processing and visualization
+pandas>=2.0.0
+matplotlib>=3.7.0
+
+# Progress bars and utilities
+tqdm>=4.65.0
+
+# Note: The project also requires the local package to be installed:
+#   pip install -e .
+# This installs the 'inversebench' package with inverse_problems module
+

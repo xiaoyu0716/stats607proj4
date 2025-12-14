@@ -1,0 +1,10 @@
+name: dps_vector
+method:
+  _target_: algo.dps_vector.DPSVector
+  scheduler_config:
+    num_steps: 1000
+    sigma_min: 0.002
+    sigma_max: 80.0
+    schedule: 'linear' # or 'exponential', consistent with training
+  guidance_scale: 1.0
+
