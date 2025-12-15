@@ -29,56 +29,56 @@ class DiffPIR(Algo):
             sigma, sigma_next = self.scheduler.sigma_steps[step], self.scheduler.sigma_steps[step+1]
             scaling_step = self.scheduler.scaling_steps[step]
             
-            # FIX: 模型输出的是epsilon，需要转换为x0
+            # FIX: Model outputs epsilon, need to convert to x0
             x_scaled = xt / scaling_step
             eps_pred = self.net(x_scaled, torch.as_tensor(sigma).to(xt.device))
             x0 = (x_scaled - sigma * eps_pred).clone().requires_grad_(True)
             
             rho =  (2*self.lamb*self.sigma_n**2)/(sigma*scaling_step)**2
             if self.linear:
-                # Linear: 使用closed-form proximal解
+                # Linear: use closed-form proximal solution
                 # x* = (A^T A + alpha*I)^{-1} (A^T y + alpha*x0)
-                # 其中 alpha = lambda * sigma_n^2 / sigma^2
-                # 注意：代码中的rho = 2*lambda*sigma_n^2/(sigma*scaling)^2
-                # 所以 alpha = rho * scaling^2 / 2，或者直接用理论公式
+                # where alpha = lambda * sigma_n^2 / sigma^2
+                # Note: rho in code = 2*lambda*sigma_n^2/(sigma*scaling)^2
+                # so alpha = rho * scaling^2 / 2, or use theoretical formula directly
                 alpha = (self.lamb * (self.sigma_n ** 2)) / max(sigma ** 2, 1e-8)
                 
-                # 转换为向量形式
+                # Convert to vector form
                 x0_vec = x0.view(num_samples, -1)  # [B, 16]
                 y_vec = self.forward_op._img_to_vec(observation)  # [B, 16]
                 y_obs = y_vec[:, :self.forward_op.A_obs_dim]  # [B, 16] for A=I
                 
-                # 获取A矩阵
+                # Get A matrix
                 A = self.forward_op.A.to(device)  # [16, 16]
                 AT = A.T
                 ATA = AT @ A  # [16, 16]
                 
-                # 计算 (A^T y + alpha*x0)
+                # Compute (A^T y + alpha*x0)
                 ATy = (AT @ y_obs.T).T  # [B, 16]
                 rhs = ATy + alpha * x0_vec  # [B, 16]
                 
-                # 求解 (ATA + alpha*I) x = rhs
+                # Solve (ATA + alpha*I) x = rhs
                 H = ATA + alpha * torch.eye(ATA.shape[0], device=device)
                 x0hat_vec = torch.linalg.solve(H, rhs.T).T  # [B, 16]
                 x0hat = self.forward_op._vec_to_img(x0hat_vec)  # [B, 1, 4, 4]
                 
-                # 计算数据拟合损失
+                # Compute data fitting loss
                 Ax0hat = (A @ x0hat_vec.T).T  # [B, 16]
                 data_fitting_loss = ((Ax0hat - y_obs) ** 2).sum(dim=1).mean().item()
                 loss_scale = torch.tensor(data_fitting_loss, device=device)
             else:
-                # Nonlinear: 使用梯度下降
-                # 注意：forward_op.gradient返回的是 -A^T(Ax-y)，没有除以sigma_n^2
-                # 所以需要手动计算正确的梯度
+                # Nonlinear: use gradient descent
+                # Note: forward_op.gradient returns -A^T(Ax-y), not divided by sigma_n^2
+                # so need to manually compute correct gradient
                 with torch.enable_grad():
                     grad_neg, loss_scale = self.forward_op.gradient(x0, observation, return_loss=True)
-                    # grad_neg = -A^T(Ax-y)，所以正确的数据梯度是 -grad_neg / sigma_n^2 = A^T(Ax-y) / sigma_n^2
-                    # 但为了proximal step，我们需要：x0hat = x0 - step_size * grad_total
-                    # 其中 grad_total = grad_data + grad_prior
+                    # grad_neg = -A^T(Ax-y), so correct data gradient is -grad_neg / sigma_n^2 = A^T(Ax-y) / sigma_n^2
+                    # For proximal step, we need: x0hat = x0 - step_size * grad_total
+                    # where grad_total = grad_data + grad_prior
                     # grad_data = A^T(Ax-y) / sigma_n^2 = -grad_neg / sigma_n^2
                     # grad_prior = lambda * (x - x0) / sigma^2 = alpha * (x - x0)
                     
-                    # 手动计算（更安全）
+                    # Manual computation (safer)
                     Ax0 = self.forward_op.forward(x0)
                     x0_vec = self.forward_op._img_to_vec(x0)
                     Ax0_vec = self.forward_op._img_to_vec(Ax0)
@@ -91,18 +91,18 @@ class DiffPIR(Algo):
                     grad_data_vec = (residual @ A_full) / (self.sigma_n ** 2)
                     grad_data = self.forward_op._vec_to_img(grad_data_vec)
                     
-                    # 先验项梯度
+                    # Prior term gradient
                     alpha = (self.lamb * (self.sigma_n ** 2)) / max(sigma ** 2, 1e-8)
-                    grad_prior = alpha * (x0 - x0.detach())  # 这里x0是detached的，所以grad_prior=0
-                    # 实际上prior项是 ||x - x0||^2，所以grad_prior = alpha * (x - x0)
-                    # 但x0是detached的，所以应该用x0的detached版本
+                    grad_prior = alpha * (x0 - x0.detach())  # x0 is detached here, so grad_prior=0
+                    # Actually prior term is ||x - x0||^2, so grad_prior = alpha * (x - x0)
+                    # But x0 is detached, so should use detached version of x0
                     x0_detached = x0.detach()
                     grad_prior = alpha * (x0 - x0_detached)
                     
                     grad_total = grad_data + grad_prior
                 
                 # Proximal step: x0hat = x0 - step_size * grad_total
-                # 使用rho作为步长的倒数
+                # Use rho as inverse of step size
                 step_size = 1.0 / max(rho, 1e-8)
                 x0hat = x0 - step_size * grad_total
             
@@ -128,5 +128,5 @@ class DiffPIR(Algo):
             if wandb.run is not None:
                 wandb.log({'data_fitting_loss': torch.sqrt(loss_scale)})
         
-        # 返回最终结果（去除scaling）
+        # Return final result (remove scaling)
         return xt / self.scheduler.scaling_steps[-1] if len(self.scheduler.scaling_steps) > 0 else xt

@@ -47,7 +47,7 @@ class MCG_diff(Algo):
         device = self.forward_op.device
 
         # -------------------------------------------------------
-        # 0. preprocess y (原始代码，不动)
+        # 0. preprocess y (original code, unchanged)
         # -------------------------------------------------------
         observation = (
             observation / self.forward_op.unnorm_scale
@@ -59,7 +59,7 @@ class MCG_diff(Algo):
         )
 
         # -------------------------------------------------------
-        # 1. 真正正确的 SVD mask（flat 16 维）
+        # 1. Correct SVD mask (flat 16-dim)
         # -------------------------------------------------------
         # SVD space is 16-dim: do NOT reshape to 4x4!
         S_flat = self.forward_op.S.view(1, 1, 1, 1, 16).to(device)   # [1,1,1,1,16]
@@ -70,7 +70,7 @@ class MCG_diff(Algo):
         S_safe = torch.where(svd_mask > 0, S_flat, torch.ones_like(S_flat))
 
         # -------------------------------------------------------
-        # 2. 将 y 投影到 16 维 SVD basis
+        # 2. Project y to 16-dim SVD basis
         # -------------------------------------------------------
         obs_ut_flat = self.forward_op.Ut(observation).view(1, 1, 1, 1, 16)
         observation_t = (obs_ut_flat / S_safe) * svd_mask            # only observed dims
@@ -79,7 +79,7 @@ class MCG_diff(Algo):
         observation_t = observation_t.expand(-1, self.num_particles, -1, -1, -1)
 
         # -------------------------------------------------------
-        # 3. 初始化粒子 x_t in SVD space  (flat)
+        # 3. Initialize particles x_t in SVD space (flat)
         # -------------------------------------------------------
         z = torch.randn(1, self.num_particles, 1, 1, 16, device=device)
         x_t = self.scheduler.sigma_max * z                           # pure noise init
@@ -131,7 +131,7 @@ class MCG_diff(Algo):
             x_next_t = torch.gather(x_next_t, 1, gather_idx)
 
             # ---------------------------------------------------
-            # 4.3 Update observed vs null separately (核心修复)
+            # 4.3 Update observed vs null separately (core fix)
             # ---------------------------------------------------
             K = self.K(step+1)
             K_tensor = torch.tensor(K, device=device)
@@ -150,25 +150,25 @@ class MCG_diff(Algo):
             x_t = svd_mask * x_obs_update + null_mask * x_null_update
 
         # -------------------------------------------------------
-        # 5. 返回 posterior sample — 选择最可能的粒子
+        # 5. Return posterior sample — select most likely particle
         # -------------------------------------------------------
-        # 计算所有 particles 的 likelihood（基于 observed dims）
-        # 使用最终的 x_t 和 observation_t
+        # Compute likelihood for all particles (based on observed dims)
+        # Use final x_t and observation_t
         # Likelihood: -||(observation_t - x_t) * svd_mask||^2 / (2 * sigma_final^2)
-        sigma_final = self.scheduler.sigma_steps[-1]  # 最后一步的 sigma
+        sigma_final = self.scheduler.sigma_steps[-1]  # sigma at final step
         if sigma_final < 1e-6:
-            sigma_final = 1e-6  # 避免除以 0
+            sigma_final = 1e-6  # Avoid division by zero
         
-        # 计算每个粒子的 likelihood（只考虑 observed dims）
+        # Compute likelihood for each particle (only consider observed dims)
         # x_t: [1, num_particles, 1, 1, 16]
         # observation_t: [1, num_particles, 1, 1, 16]
         log_likelihood = -(((observation_t - x_t) * svd_mask).flatten(2).norm(dim=-1)**2) / (2 * sigma_final**2)
         # log_likelihood: [1, num_particles]
         
-        # 选择 likelihood 最高的粒子
+        # Select particle with highest likelihood
         best_pid = log_likelihood.argmax(dim=1).item()  # [1] -> scalar
         
-        # 返回最可能的粒子
+        # Return most likely particle
         x_final_svd = x_t[0, best_pid:best_pid+1].view(1, 1, 4, 4)
         # Convert back to image
         x_img = self.forward_op.V(x_final_svd)

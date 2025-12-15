@@ -2,21 +2,21 @@ name: PnPDM-toy
 method:
   _target_: algo.pnpdm.PnPDM
   annealing_scheduler_config:
-    num_steps: 100          # 和 diffusion num_steps 对齐
-    sigma_max: 5.0         # 和 diffusion sigma_max 对齐
-    sigma_min: 0.05        # 不用太小，toy 上 0.05 就够
+    num_steps: 100          # Align with diffusion num_steps
+    sigma_max: 5.0         # Align with diffusion sigma_max
+    sigma_min: 0.05        # No need to be too small, 0.05 is enough for toy problem
     rho: 0.93
 
   diffusion_scheduler_config:
-    num_steps: 100          # 跟外层同一个数量级
-    sigma_max: 5.0         # 和 annealing sigma_max 对齐
-    sigma_min: 0.05        # 和 annealing sigma_min 对齐
+    num_steps: 100          # Same order of magnitude as outer level
+    sigma_max: 5.0         # Align with annealing sigma_max
+    sigma_min: 0.05        # Align with annealing sigma_min
     sigma_final: 0
     schedule: 'linear'
     timestep: 'poly-7'
 
   lgvd_config:
-    num_steps: 20          # 每层 10~20 步就够了
-    lr: 5e-4               # 步长放大，让 x 真正往 data 方向走
-    tau: 0.1               # 和 noise_std 匹配（toy 里 noise_std=0.5）
+    num_steps: 20          # 10~20 steps per layer is enough
+    lr: 5e-4               # Increase step size to make x move towards data direction
+    tau: 0.1               # Match noise_std (noise_std=0.5 in toy problem)
     lr_min_ratio: 0.1

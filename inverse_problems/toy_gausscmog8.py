@@ -7,12 +7,12 @@ import torch
 
 def make_mri_like_A_16(num_samples: int = 8, seed: int = 0):
     """
-    构造一个类似 MRI 的 16×16 线性算子 A = M @ F
-    - F: 16×16 正交矩阵（类 Fourier）
-    - M: 0/1 对角 mask，只有 num_samples 个 1
-    返回:
+    Construct an MRI-like 16×16 linear operator A = M @ F
+    - F: 16×16 orthogonal matrix (Fourier-like)
+    - M: 0/1 diagonal mask with num_samples ones
+    Returns:
         A: [16, 16] torch.float32
-        mask: [16] 0/1 向量（哪些“频率”被采样）
+        mask: [16] 0/1 vector (which "frequencies" are sampled)
     """
     torch.manual_seed(seed)
 
@@ -20,10 +20,10 @@ def make_mri_like_A_16(num_samples: int = 8, seed: int = 0):
 
     F = make_dft_matrix(N)                     # F: [16,16]
 
-    # 2) 构造一个 0/1 mask（选 num_samples 行）
+    # 2) Construct a 0/1 mask (select num_samples rows)
     mask = torch.zeros(N)
     idx = torch.randperm(N)[:num_samples]
-    mask[idx] = 1.0                    # 这些“频率”被观测到
+    mask[idx] = 1.0                    # These "frequencies" are observed
 
     M = torch.diag(mask)               # [16,16]
 
@@ -37,9 +37,9 @@ def make_dft_matrix(N):
     for k in range(N):
         for n in range(N):
             angle = 2.0 * math.pi * k * n / N
-            # 只取 cos 部分做一个 real "Fourier-like" 矩阵
+            # Use only cos part to make a real "Fourier-like" matrix
             F[k, n] = math.cos(angle) / math.sqrt(N)
-    # F 不是严格正交，但条件数很温和
+    # F is not strictly orthogonal, but condition number is mild
     return F
 
 
